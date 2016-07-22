@@ -21,6 +21,12 @@ public class MyLinearLayout extends LinearLayout implements NestedScrollingParen
 
     private View mTarget = null; // the target of the gesture
 
+    private int refresh_Y = 0;
+    private int loading_Y = 0;
+
+    private int RAWX = -1;
+    private int RAWY = -1;
+
     private final NestedScrollingParentHelper mNestedScrollingParentHelper;
 //    private final NestedScrollingChildHelper mNestedScrollingChildHelper;
 
@@ -80,20 +86,55 @@ public class MyLinearLayout extends LinearLayout implements NestedScrollingParen
         //startNestedScroll(nestedScrollAxes & ViewCompat.SCROLL_AXIS_VERTICAL);
     }
 
+    //dyUnconsumed < 0 means finger move to down else up
+    @Override
+    public void onNestedScroll(View target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed) {
+        Log.d("onNestedScroll","dxConsumed = "+dxConsumed+"\t"+"dyConsumed = "+dyConsumed+"\t"+"dxUnconsumed = "+dxUnconsumed+"\t"+"dyUnconsumed = "+dyUnconsumed);
+        if(dyUnconsumed == 0)
+        {
+            refresh_Y = 0;
+        }else{
+            refresh_Y -= dyUnconsumed;
+            mTarget.setY(RAWX + refresh_Y);
+            Log.d("dyUnconsumed = ","refreshY = "+refresh_Y);
+        }
+
+    }
+
+    //dy < 0 means finger move to down else up
+    @Override
+    public void onNestedPreScroll(View target, int dx, int dy, int[] consumed) {
+//        if(refresh_Y != 0)
+//        {
+//            mTarget.offsetTopAndBottom(-dy);
+//            refresh_Y -= dy;
+//            consumed[1] = -dy;
+//        }
+
+        //this case Y must be consumed
+        if(refresh_Y>0 && dy <0 )
+        {
+            refresh_Y -= dy;
+            mTarget.setY(RAWY + refresh_Y);
+            consumed[1] = dy;
+        }
+        else if(refresh_Y<0 && dy > 0){
+            refresh_Y -= dy;
+            mTarget.setY(RAWY + refresh_Y);
+            consumed[1] = dy;
+        }
+        Log.d("onNestedPreScroll","dx = "+dx+"\t"+"dy = "+dy+"\t"+"consumed x= "+consumed[0]+"\t"+"consumed y= "+consumed[1]);
+    }
+
     @Override
     public void onStopNestedScroll(View target) {
         Log.d("onStopNestedScroll","true");
         mNestedScrollingParentHelper.onStopNestedScroll(target);
-    }
-
-    @Override
-    public void onNestedScroll(View target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed) {
-        Log.d("onNestedScroll","dxConsumed = "+dxConsumed+"\t"+"dyConsumed = "+dyConsumed+"\t"+"dxUnconsumed = "+dxUnconsumed+"\t"+"dyUnconsumed = "+dyUnconsumed);
-    }
-
-    @Override
-    public void onNestedPreScroll(View target, int dx, int dy, int[] consumed) {
-        Log.d("onNestedPreScroll","dx = "+dx+"\t"+"dy = "+dy+"\t"+"consumed x= "+consumed[0]+"\t"+"consumed y= "+consumed[1]);
+        if(refresh_Y > 0)
+        {
+            mTarget.setY(RAWY);
+            refresh_Y = 0;
+        }
     }
 
     @Override
@@ -128,14 +169,22 @@ public class MyLinearLayout extends LinearLayout implements NestedScrollingParen
     }
 
     @Override
-    public boolean onInterceptTouchEvent(MotionEvent ev) {
-        ensureTarget();
-        if(canChildScrollUp())
-        {
-            return false;
-        }
-        return false;
+    protected void onLayout(boolean changed, int l, int t, int r, int b) {
+        super.onLayout(changed, l, t, r, b);
+        RAWX = (int) mTarget.getX();
+        RAWX = (int) mTarget.getY();
+        Log.d("point = ",RAWX+","+RAWY);
     }
+
+    //    @Override
+//    public boolean onInterceptTouchEvent(MotionEvent ev) {
+//        ensureTarget();
+//        if(canChildScrollUp())
+//        {
+//            return false;
+//        }
+//        return false;
+//    }
 
     /**
      * @return Whether it is possible for the child view of this layout to
