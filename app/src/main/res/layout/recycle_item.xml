@@ -2,14 +2,13 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:minHeight="30dp"
+    android:layout_height="100px"
     >
 
     <TextView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="100px"
         android:id="@+id/item"
-        android:minHeight="30dp"
+        android:minHeight="100px"
         />
 </LinearLayout>
