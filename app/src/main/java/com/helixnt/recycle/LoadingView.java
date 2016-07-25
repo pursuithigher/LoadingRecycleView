@@ -13,11 +13,12 @@ import android.view.View;
 
 import com.helixnt.adapter.DecorRecycleAdapter;
 import com.helixnt.adapter.ItemGetCallback;
+import com.helixnt.interf.LoadingInterface;
 
 /**
  * Created by QZhu on 16-7-22.
  */
-public class LoadingView extends RecyclerView implements ItemGetCallback{
+public class LoadingView extends RecyclerView implements ItemGetCallback,LoadingInterface {
 
     private static final String TAG = "LoadingRecycleView";
 
@@ -60,6 +61,11 @@ public class LoadingView extends RecyclerView implements ItemGetCallback{
     public void setLayoutManager(LayoutManager layout) {
         super.setLayoutManager(layout);
         this.layout = layout;
+    }
+
+    @Override
+    public LayoutManager getLayoutManager() {
+        return super.getLayoutManager();
     }
 
     private void initListener() {

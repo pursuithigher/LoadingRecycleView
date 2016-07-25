@@ -1,13 +1,13 @@
 package com.helixnt.nestscroll;
 
 import android.content.Context;
-import android.support.v4.view.MotionEventCompat;
 import android.support.v4.view.NestedScrollingParent;
 import android.support.v4.view.NestedScrollingParentHelper;
 import android.support.v4.view.ViewCompat;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AbsListView;
 import android.widget.LinearLayout;
@@ -19,16 +19,40 @@ import com.helixnt.recycle.LoadingView;
  */
 public class MyLinearLayout extends LinearLayout implements NestedScrollingParent{//NestedScrollingChild
 
-    private View mTarget = null; // the target of the gesture
+    private RecyclerView mTarget = null; // the target of the gesture
 
-    private int refresh_Y = 0;
+    private int offSet_Y = 0;
     private int loading_Y = 0;
 
     private int RAWX = -1;
     private int RAWY = -1;
 
+    private boolean refreshEnabled = true;
+    private boolean loadEnabled = true;
+
+    public boolean isRefreshEnabled() {
+        return refreshEnabled;
+    }
+
+    public void setRefreshEnabled(boolean refreshEnabled) {
+        this.refreshEnabled = refreshEnabled;
+    }
+
+    public boolean isLoadEnabled() {
+        return loadEnabled;
+    }
+
+    public void setLoadEnabled(boolean loadEnabled) {
+        this.loadEnabled = loadEnabled;
+    }
+
+    public void setListEnabled(boolean listEnabled){
+        setRefreshEnabled(listEnabled);
+        setLoadEnabled(listEnabled);
+    }
+
+
     private final NestedScrollingParentHelper mNestedScrollingParentHelper;
-//    private final NestedScrollingChildHelper mNestedScrollingChildHelper;
 
     public MyLinearLayout(Context context) {
         this(context,null);
@@ -41,8 +65,6 @@ public class MyLinearLayout extends LinearLayout implements NestedScrollingParen
     public MyLinearLayout(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         mNestedScrollingParentHelper = new NestedScrollingParentHelper(this);
-
-//        mNestedScrollingChildHelper = new NestedScrollingChildHelper(this);
     }
 
     private void ensureTarget() {
@@ -51,8 +73,8 @@ public class MyLinearLayout extends LinearLayout implements NestedScrollingParen
         if (mTarget == null) {
             for (int i = 0; i < getChildCount(); i++) {
                 View child = getChildAt(i);
-                if (child instanceof LoadingView) {
-                    mTarget = child;
+                if (child instanceof RecyclerView) {
+                    mTarget = (RecyclerView) child;
                     break;
                 }
             }
@@ -61,25 +83,25 @@ public class MyLinearLayout extends LinearLayout implements NestedScrollingParen
 
     @Override
     public boolean onStartNestedScroll(View child, View target, int nestedScrollAxes) {
-        Log.d("onStartNestedScroll",getNestString(nestedScrollAxes));
+//        Log.d("onStartNestedScroll",getNestString(nestedScrollAxes));
         return true;
     }
 
-    private String getNestString(int type){
+    private void setNestString(int type){
         switch(type)
         {
             case ViewCompat.SCROLL_AXIS_VERTICAL:
-                return "vertical";
-            case ViewCompat.SCROLL_AXIS_HORIZONTAL:
-                return "horizontal";
+                setListEnabled(true);
+//            case ViewCompat.SCROLL_AXIS_HORIZONTAL:
+//                return "horizontal";
             default:
-                return "null";
+                setListEnabled(false);
         }
     }
 
     @Override
     public void onNestedScrollAccepted(View child, View target, int nestedScrollAxes) {
-        Log.d("onNestedScrollAccepted",getNestString(nestedScrollAxes));
+        setNestString(nestedScrollAxes);
         // Reset the counter of how much leftover scroll needs to be consumed.
         mNestedScrollingParentHelper.onNestedScrollAccepted(child, target, nestedScrollAxes);
         // Dispatch up to the nested parent
@@ -87,53 +109,89 @@ public class MyLinearLayout extends LinearLayout implements NestedScrollingParen
     }
 
     //dyUnconsumed < 0 means finger move to down else up
+    //dyUnconsumed < 0
     @Override
     public void onNestedScroll(View target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed) {
-        Log.d("onNestedScroll","dxConsumed = "+dxConsumed+"\t"+"dyConsumed = "+dyConsumed+"\t"+"dxUnconsumed = "+dxUnconsumed+"\t"+"dyUnconsumed = "+dyUnconsumed);
-        if(dyUnconsumed == 0)
+        if(refreshEnabled)
         {
-            refresh_Y = 0;
-        }else{
-            refresh_Y -= dyUnconsumed;
-            mTarget.setY(RAWX + refresh_Y);
-            Log.d("dyUnconsumed = ","refreshY = "+refresh_Y);
+            if(dyUnconsumed < 0)
+            {
+                offSet_Y -= dyUnconsumed;
+                mTarget.setY(RAWY + offSet_Y);
+                return ;
+            }
         }
+        if(loadEnabled)
+        {
+            if(dyUnconsumed > 0)
+            {
+                offSet_Y -= dyUnconsumed;
+                mTarget.setY(RAWY + offSet_Y);
+                return ;
+            }
+        }
+
 
     }
 
     //dy < 0 means finger move to down else up
     @Override
     public void onNestedPreScroll(View target, int dx, int dy, int[] consumed) {
-//        if(refresh_Y != 0)
-//        {
-//            mTarget.offsetTopAndBottom(-dy);
-//            refresh_Y -= dy;
-//            consumed[1] = -dy;
-//        }
+        if (refreshEnabled) {
+            //up movement
+            if (dy > 0) {
+                if (offSet_Y > 0) {
+                    if (offSet_Y > dy) {
+                        offSet_Y -= dy;
+                        consumed[1] = dy;
+                    } else {
+                        consumed[1] = offSet_Y;
+                        offSet_Y = 0;
+                    }
+                    mTarget.setY(RAWY + offSet_Y);
+                    return;
+                }
+            }
+        }
 
-        //this case Y must be consumed
-        if(refresh_Y>0 && dy <0 )
+        if (loadEnabled) {
+            if (dy < 0) {
+                if (isLastItemVisible()) {
+                    if (offSet_Y < 0) {
+                        if (offSet_Y < dy) {
+                            offSet_Y -= dy;
+                            consumed[1] = dy;
+                        } else {
+                            consumed[1] = -offSet_Y;
+                            offSet_Y = 0;
+                        }
+                        mTarget.setY(RAWY + offSet_Y);
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+    private boolean isLastItemVisible(){
+        RecyclerView.LayoutManager layoutManager = mTarget.getLayoutManager();
+        if(layoutManager instanceof LinearLayoutManager)
         {
-            refresh_Y -= dy;
-            mTarget.setY(RAWY + refresh_Y);
-            consumed[1] = dy;
+            return ((LinearLayoutManager)layoutManager).findLastCompletelyVisibleItemPosition() >= layoutManager.getItemCount()-1;
         }
-        else if(refresh_Y<0 && dy > 0){
-            refresh_Y -= dy;
-            mTarget.setY(RAWY + refresh_Y);
-            consumed[1] = dy;
+        else{
+            return false;
         }
-        Log.d("onNestedPreScroll","dx = "+dx+"\t"+"dy = "+dy+"\t"+"consumed x= "+consumed[0]+"\t"+"consumed y= "+consumed[1]);
     }
 
     @Override
     public void onStopNestedScroll(View target) {
         Log.d("onStopNestedScroll","true");
         mNestedScrollingParentHelper.onStopNestedScroll(target);
-        if(refresh_Y > 0)
+        if(offSet_Y != 0)
         {
             mTarget.setY(RAWY);
-            refresh_Y = 0;
+            offSet_Y = 0;
         }
     }
 
@@ -172,36 +230,8 @@ public class MyLinearLayout extends LinearLayout implements NestedScrollingParen
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
         super.onLayout(changed, l, t, r, b);
         RAWX = (int) mTarget.getX();
-        RAWX = (int) mTarget.getY();
+        RAWY = (int) mTarget.getY();
         Log.d("point = ",RAWX+","+RAWY);
     }
 
-    //    @Override
-//    public boolean onInterceptTouchEvent(MotionEvent ev) {
-//        ensureTarget();
-//        if(canChildScrollUp())
-//        {
-//            return false;
-//        }
-//        return false;
-//    }
-
-    /**
-     * @return Whether it is possible for the child view of this layout to
-     *         scroll up. Override this if the child view is a custom view.
-     */
-    public boolean canChildScrollUp() {
-        if (android.os.Build.VERSION.SDK_INT < 14) {
-            if (mTarget instanceof AbsListView) {
-                final AbsListView absListView = (AbsListView) mTarget;
-                return absListView.getChildCount() > 0
-                        && (absListView.getFirstVisiblePosition() > 0 || absListView.getChildAt(0)
-                        .getTop() < absListView.getPaddingTop());
-            } else {
-                return ViewCompat.canScrollVertically(mTarget, -1) || mTarget.getScrollY() > 0;
-            }
-        } else {
-            return ViewCompat.canScrollVertically(mTarget, -1);
-        }
-    }
 }
