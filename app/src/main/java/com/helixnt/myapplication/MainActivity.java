@@ -15,7 +15,7 @@ import java.util.ArrayList;
 /**
  * Created by QZhu on 16-7-22.
  */
-public class MainActivity3 extends FragmentActivity{
+public class MainActivity extends FragmentActivity{
 
 //
     RecyclerView recycleView;
@@ -25,7 +25,7 @@ public class MainActivity3 extends FragmentActivity{
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.loadlayout);
+        setContentView(R.layout.load_layout);
 
         loadLayout = (LoadLayout) findViewById(R.id.load_layout);
         recycleView = loadLayout.getRecycleView();
