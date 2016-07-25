@@ -3,21 +3,20 @@ package com.helixnt.nestscroll;
 import android.content.Context;
 import android.support.v4.view.NestedScrollingParent;
 import android.support.v4.view.NestedScrollingParentHelper;
-import android.support.v4.view.ViewCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
-import android.widget.AbsListView;
-import android.widget.LinearLayout;
-
-import com.helixnt.recycle.LoadingView;
+import android.widget.RelativeLayout;
 
 /**
  * Created by QZhu on 16-7-22.
  */
-public class MyLinearLayout extends LinearLayout implements NestedScrollingParent{//NestedScrollingChild
+public class LoadLayout extends RelativeLayout implements NestedScrollingParent{//NestedScrollingChild
+
+    public final static String HEADERALIAS = "load_header";
+    public final static String FOOTERALIAS = "load_footer";
 
     private RecyclerView mTarget = null; // the target of the gesture
 
@@ -29,6 +28,9 @@ public class MyLinearLayout extends LinearLayout implements NestedScrollingParen
 
     private boolean refreshEnabled = true;
     private boolean loadEnabled = true;
+
+    private View header = null;
+    private View footer = null;
 
     public boolean isRefreshEnabled() {
         return refreshEnabled;
@@ -54,15 +56,15 @@ public class MyLinearLayout extends LinearLayout implements NestedScrollingParen
 
     private final NestedScrollingParentHelper mNestedScrollingParentHelper;
 
-    public MyLinearLayout(Context context) {
+    public LoadLayout(Context context) {
         this(context,null);
     }
 
-    public MyLinearLayout(Context context, AttributeSet attrs) {
+    public LoadLayout(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
-    public MyLinearLayout(Context context, AttributeSet attrs, int defStyleAttr) {
+    public LoadLayout(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         mNestedScrollingParentHelper = new NestedScrollingParentHelper(this);
     }
@@ -76,6 +78,12 @@ public class MyLinearLayout extends LinearLayout implements NestedScrollingParen
                 if (child instanceof RecyclerView) {
                     mTarget = (RecyclerView) child;
                     break;
+                }
+                if(child.getContentDescription().equals(HEADERALIAS)) {
+                    header = child;
+                }
+                if(child.getContentDescription().equals(FOOTERALIAS)){
+                    footer = child;
                 }
             }
         }
@@ -217,6 +225,8 @@ public class MyLinearLayout extends LinearLayout implements NestedScrollingParen
         super.onLayout(changed, l, t, r, b);
         RAWX = (int) mTarget.getX();
         RAWY = (int) mTarget.getY();
+        setHeaderHeight(header.getHeight());
+        setFooterHeight(footer.getHeight());
         setListEnabled(true);
     }
 
@@ -234,12 +244,14 @@ public class MyLinearLayout extends LinearLayout implements NestedScrollingParen
 //        return distant;
 //    }
 
-    public void setHeaderHeight(int headerHeight) {
+    private void setHeaderHeight(int headerHeight) {
         this.headerHeight = headerHeight;
+        Log.d("header height = ",String.valueOf(headerHeight));
     }
 
-    public void setFooterHeight(int footerHeight) {
+    private void setFooterHeight(int footerHeight) {
         this.footerHeight = footerHeight;
+        Log.d("footer height = ",String.valueOf(footerHeight));
     }
 
     private int changeOffsetY(int disy){
@@ -253,7 +265,7 @@ public class MyLinearLayout extends LinearLayout implements NestedScrollingParen
     }
 
     public interface onPrecessChangeListener{
-        void onLoad(int porcess);
+        void onLoad(int process);
         void onRefresh(int process);
     }
 
@@ -278,6 +290,18 @@ public class MyLinearLayout extends LinearLayout implements NestedScrollingParen
             precessChangeListener.onLoad(percent > 100 ? 100:percent);
         }
 
+    }
+
+    public RecyclerView getRecycleView(){
+        if (mTarget == null) {
+            for (int i = 0; i < getChildCount(); i++) {
+                View child = getChildAt(i);
+                if (child instanceof RecyclerView) {
+                    return (RecyclerView) child;
+                }
+            }
+        }
+        return mTarget;
     }
 
 }
