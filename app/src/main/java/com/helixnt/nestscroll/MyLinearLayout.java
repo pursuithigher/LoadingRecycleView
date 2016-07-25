@@ -83,25 +83,12 @@ public class MyLinearLayout extends LinearLayout implements NestedScrollingParen
 
     @Override
     public boolean onStartNestedScroll(View child, View target, int nestedScrollAxes) {
-//        Log.d("onStartNestedScroll",getNestString(nestedScrollAxes));
         return true;
     }
 
-    private void setNestString(int type){
-        switch(type)
-        {
-            case ViewCompat.SCROLL_AXIS_VERTICAL:
-                setListEnabled(true);
-//            case ViewCompat.SCROLL_AXIS_HORIZONTAL:
-//                return "horizontal";
-            default:
-                setListEnabled(false);
-        }
-    }
 
     @Override
     public void onNestedScrollAccepted(View child, View target, int nestedScrollAxes) {
-        setNestString(nestedScrollAxes);
         // Reset the counter of how much leftover scroll needs to be consumed.
         mNestedScrollingParentHelper.onNestedScrollAccepted(child, target, nestedScrollAxes);
         // Dispatch up to the nested parent
@@ -117,7 +104,8 @@ public class MyLinearLayout extends LinearLayout implements NestedScrollingParen
             if(dyUnconsumed < 0)
             {
                 offSet_Y -= dyUnconsumed;
-                mTarget.setY(RAWY + offSet_Y);
+                mTarget.setY(RAWY + changeOffsetY(offSet_Y));//getCalculatorY(offSet_Y));
+                nodifyRefreshProcess(offSet_Y);
                 return ;
             }
         }
@@ -126,12 +114,11 @@ public class MyLinearLayout extends LinearLayout implements NestedScrollingParen
             if(dyUnconsumed > 0)
             {
                 offSet_Y -= dyUnconsumed;
-                mTarget.setY(RAWY + offSet_Y);
+                mTarget.setY(RAWY + changeOffsetY(offSet_Y));
+                nodifyLoadProcess(offSet_Y);
                 return ;
             }
         }
-
-
     }
 
     //dy < 0 means finger move to down else up
@@ -148,7 +135,7 @@ public class MyLinearLayout extends LinearLayout implements NestedScrollingParen
                         consumed[1] = offSet_Y;
                         offSet_Y = 0;
                     }
-                    mTarget.setY(RAWY + offSet_Y);
+                    mTarget.setY(RAWY + changeOffsetY(offSet_Y));//getCalculatorY(offSet_Y));
                     return;
                 }
             }
@@ -165,7 +152,7 @@ public class MyLinearLayout extends LinearLayout implements NestedScrollingParen
                             consumed[1] = -offSet_Y;
                             offSet_Y = 0;
                         }
-                        mTarget.setY(RAWY + offSet_Y);
+                        mTarget.setY(RAWY + changeOffsetY(offSet_Y));
                         return;
                     }
                 }
@@ -197,7 +184,6 @@ public class MyLinearLayout extends LinearLayout implements NestedScrollingParen
 
     @Override
     public boolean onNestedFling(View target, float velocityX, float velocityY, boolean consumed) {
-        Log.d("onNestedFling", String.valueOf(consumed));
         return false;
     }
 
@@ -231,7 +217,67 @@ public class MyLinearLayout extends LinearLayout implements NestedScrollingParen
         super.onLayout(changed, l, t, r, b);
         RAWX = (int) mTarget.getX();
         RAWY = (int) mTarget.getY();
-        Log.d("point = ",RAWX+","+RAWY);
+        setListEnabled(true);
+    }
+
+
+    private int headerHeight = 100;
+    private int footerHeight = 100;
+
+    //private final int FACTX = 600;//max distance that move to height when complete visible
+//    private int getCalculatorY(int disy){
+//        Log.d("distant disy = ",String.valueOf(disy));
+//        int distant = (int) Math.sqrt(headerHeight*headerHeight*disy/FACTX);
+//        if(distant >= headerHeight)
+//            distant = headerHeight;
+//        Log.d("distant height = ",String.valueOf(distant));
+//        return distant;
+//    }
+
+    public void setHeaderHeight(int headerHeight) {
+        this.headerHeight = headerHeight;
+    }
+
+    public void setFooterHeight(int footerHeight) {
+        this.footerHeight = footerHeight;
+    }
+
+    private int changeOffsetY(int disy){
+        if(disy > headerHeight)
+        {
+            return headerHeight;
+        }else if(-disy > footerHeight){
+            return -footerHeight;
+        }
+        return disy;
+    }
+
+    public interface onPrecessChangeListener{
+        void onLoad(int porcess);
+        void onRefresh(int process);
+    }
+
+    onPrecessChangeListener precessChangeListener;
+
+    public void setPrecessChangeListener(onPrecessChangeListener precessChangeListener) {
+        this.precessChangeListener = precessChangeListener;
+    }
+
+    private void nodifyRefreshProcess(int offsety){
+        if(precessChangeListener != null)
+        {
+            int percent = (int) ((offsety*1.0f/headerHeight)*100);
+            precessChangeListener.onRefresh(percent > 100 ? 100:percent);
+        }
+    }
+
+    private void nodifyLoadProcess(int offsety){
+        if(precessChangeListener != null)
+        {
+            int percent = (int) ((offsety*1.0f/headerHeight)*100);
+            precessChangeListener.onLoad(percent > 100 ? 100:percent);
+        }
+
     }
 
 }
