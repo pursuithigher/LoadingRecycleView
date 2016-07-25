@@ -15,8 +15,6 @@ import java.util.List;
  */
 public class MyLoadingAdapter extends RecyclerView.Adapter<MyLoadingAdapter.ViewHolder> {
 
-    protected static int NONE = 0;
-
     List<?> datas = null ;
 
     public MyLoadingAdapter(List<?> datas){
@@ -27,7 +25,7 @@ public class MyLoadingAdapter extends RecyclerView.Adapter<MyLoadingAdapter.View
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.recycle_item,parent,false);
 
-            return new ViewHolder(view,NONE);
+            return new ViewHolder(view);
     }
 
     @Override
@@ -44,21 +42,12 @@ public class MyLoadingAdapter extends RecyclerView.Adapter<MyLoadingAdapter.View
 
     public static class ViewHolder extends RecyclerView.ViewHolder{
         TextView textView;
-        private int type = NONE;
-        public ViewHolder(View itemView,int type) {
+        public ViewHolder(View itemView) {
             super(itemView);
             textView = (TextView) itemView.findViewById(R.id.item);
         }
         public void attachedToUI(int positon){
-            String mtext ;
-            if(positon == 0)
-            {
-                mtext = "it is header";
-            }else {
-                mtext = "type = " + String.valueOf(type) + "\t" + String.valueOf(positon);
-            }
-            textView.setText(mtext);
-
+            textView.setText(String.valueOf(positon));
         }
     }
 }

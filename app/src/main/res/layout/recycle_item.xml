@@ -10,5 +10,6 @@
         android:layout_height="100px"
         android:id="@+id/item"
         android:minHeight="100px"
+        android:gravity="center"
         />
 </LinearLayout>
