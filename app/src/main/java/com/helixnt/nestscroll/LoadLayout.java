@@ -1,6 +1,11 @@
 package com.helixnt.nestscroll;
 
+import android.animation.Animator;
+import android.animation.ObjectAnimator;
+import android.animation.TypeEvaluator;
+import android.animation.ValueAnimator;
 import android.content.Context;
+import android.graphics.Point;
 import android.support.v4.view.NestedScrollingParent;
 import android.support.v4.view.NestedScrollingParentHelper;
 import android.support.v7.widget.LinearLayoutManager;
@@ -8,6 +13,7 @@ import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
+import android.view.animation.LinearInterpolator;
 import android.widget.RelativeLayout;
 
 /**
@@ -15,16 +21,17 @@ import android.widget.RelativeLayout;
  */
 public class LoadLayout extends RelativeLayout implements NestedScrollingParent{//NestedScrollingChild
 
+    public final static int BounceTime = 1000;
+
     public final static String HEADERALIAS = "load_header";
     public final static String FOOTERALIAS = "load_footer";
 
     private RecyclerView mTarget = null; // the target of the gesture
 
     private int offSet_Y = 0;
-    private int loading_Y = 0;
+    private int RAWY = -1;  //offSet_Y -> RAWY add a animator
 
     private int RAWX = -1;
-    private int RAWY = -1;
 
     private boolean refreshEnabled = true;
     private boolean loadEnabled = true;
@@ -91,6 +98,13 @@ public class LoadLayout extends RelativeLayout implements NestedScrollingParent{
 
     @Override
     public boolean onStartNestedScroll(View child, View target, int nestedScrollAxes) {
+        if(objectAnimator!=null && objectAnimator.isRunning())
+        {
+            objectAnimator.cancel();
+            objectAnimator.removeAllListeners();
+            objectAnimator = null;
+        }
+
         return true;
     }
 
@@ -112,7 +126,8 @@ public class LoadLayout extends RelativeLayout implements NestedScrollingParent{
             if(dyUnconsumed < 0)
             {
                 offSet_Y -= dyUnconsumed;
-                mTarget.setY(RAWY + changeOffsetY(offSet_Y));//getCalculatorY(offSet_Y));
+                offSet_Y = changeOffsetY(offSet_Y);
+                mTarget.setY(RAWY + offSet_Y);//getCalculatorY(offSet_Y));
                 nodifyRefreshProcess(offSet_Y);
                 return ;
             }
@@ -122,7 +137,8 @@ public class LoadLayout extends RelativeLayout implements NestedScrollingParent{
             if(dyUnconsumed > 0)
             {
                 offSet_Y -= dyUnconsumed;
-                mTarget.setY(RAWY + changeOffsetY(offSet_Y));
+                offSet_Y = changeOffsetY(offSet_Y);
+                mTarget.setY(RAWY + offSet_Y);
                 nodifyLoadProcess(offSet_Y);
                 return ;
             }
@@ -179,16 +195,41 @@ public class LoadLayout extends RelativeLayout implements NestedScrollingParent{
         }
     }
 
+    ObjectAnimator objectAnimator = null;
+
     @Override
     public void onStopNestedScroll(View target) {
-        Log.d("onStopNestedScroll","true");
         mNestedScrollingParentHelper.onStopNestedScroll(target);
         if(offSet_Y != 0)
         {
-            mTarget.setY(RAWY);
-            offSet_Y = 0;
+            objectAnimator = ObjectAnimator.ofFloat(mTarget,View.Y,offSet_Y,0).setDuration(BounceTime);
+            objectAnimator.setInterpolator(new LinearInterpolator());
+            objectAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                @Override
+                public void onAnimationUpdate(ValueAnimator animation) {
+                    float value = (Float) animation.getAnimatedValue();
+                    offSet_Y = (int) value;
+                    mTarget.setY(RAWY + offSet_Y);
+                    Log.d("position = ",String.valueOf(offSet_Y));
+                }
+            });
+//            objectAnimator.addListener(animatorListener);
+            objectAnimator.start();
         }
     }
+
+//    final Animator.AnimatorListener animatorListener = new Animator.AnimatorListener() {
+//        @Override
+//        public void onAnimationStart(Animator animation) {}
+//        @Override
+//        public void onAnimationEnd(Animator animation) {}
+//        @Override
+//        public void onAnimationRepeat(Animator animation) {}
+//        @Override
+//        public void onAnimationCancel(Animator animation) {
+//
+//        }
+//    };
 
     @Override
     public boolean onNestedFling(View target, float velocityX, float velocityY, boolean consumed) {
@@ -233,16 +274,6 @@ public class LoadLayout extends RelativeLayout implements NestedScrollingParent{
 
     private int headerHeight = 100;
     private int footerHeight = 100;
-
-    //private final int FACTX = 600;//max distance that move to height when complete visible
-//    private int getCalculatorY(int disy){
-//        Log.d("distant disy = ",String.valueOf(disy));
-//        int distant = (int) Math.sqrt(headerHeight*headerHeight*disy/FACTX);
-//        if(distant >= headerHeight)
-//            distant = headerHeight;
-//        Log.d("distant height = ",String.valueOf(distant));
-//        return distant;
-//    }
 
     private void setHeaderHeight(int headerHeight) {
         this.headerHeight = headerHeight;
