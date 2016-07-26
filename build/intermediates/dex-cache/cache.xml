@@ -1,2 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
-<items version="2" />
+<items version="2" >
+
+    <item
+        jar="/home/qzzhu/github/app/build/intermediates/exploded-aar/com.android.support/recyclerview-v7/24.0.0/jars/classes.jar"
+        jumboMode="false"
+        revision="23.0.3"
+        sha1="894922f67adeaaef51f077a29e315da21a3382d3">
+        <dex dex="/home/qzzhu/github/app/build/intermediates/pre-dexed/debug/com.android.support-recyclerview-v7-24.0.0_59763cfc29c32bf16867e6c915f47f2c23ef5536.jar" />
+    </item>
+    <item
+        jar="/home/qzzhu/github/app/build/intermediates/exploded-aar/com.android.support/support-v4/24.0.0/jars/libs/internal_impl-24.0.0.jar"
+        jumboMode="false"
+        revision="23.0.3"
+        sha1="fcaf463e10e69c1923ccf1edeba3b4196d239e00">
+        <dex dex="/home/qzzhu/github/app/build/intermediates/pre-dexed/debug/internal_impl-24.0.0_637bd348ed12fdfcb8cdfe6286b54e63be914fb6.jar" />
+    </item>
+    <item
+        jar="/home/qzzhu/.gradle/caches/modules-2/files-2.1/com.android.support/support-annotations/24.0.0/2943c74db6d4346ab8c6531adac91fa05c137c40/support-annotations-24.0.0.jar"
+        jumboMode="false"
+        revision="23.0.3"
+        sha1="2943c74db6d4346ab8c6531adac91fa05c137c40">
+        <dex dex="/home/qzzhu/github/app/build/intermediates/pre-dexed/debug/support-annotations-24.0.0_813c1f79dcd37900a6e33f40748cb00bcd9f833b.jar" />
+    </item>
+    <item
+        jar="/home/qzzhu/github/app/build/intermediates/exploded-aar/com.android.support/support-v4/24.0.0/jars/classes.jar"
+        jumboMode="false"
+        revision="23.0.3"
+        sha1="2f7e6e2dad1bccaf68a8820820adc6c0d5b96d37">
+        <dex dex="/home/qzzhu/github/app/build/intermediates/pre-dexed/debug/com.android.support-support-v4-24.0.0_0e02d534d469a02966f109267cf939b5d3b1c30a.jar" />
+    </item>
+
+</items>

@@ -8,5 +8,4 @@ import android.support.v7.widget.RecyclerView;
 public interface LoadingInterface {
 
     RecyclerView.LayoutManager getLayoutManager();
-
 }
