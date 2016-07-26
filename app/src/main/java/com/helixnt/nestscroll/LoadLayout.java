@@ -61,6 +61,7 @@ public class LoadLayout extends RelativeLayout implements NestedScrollingParent{
     }
 
 
+
     private final NestedScrollingParentHelper mNestedScrollingParentHelper;
 
     public LoadLayout(Context context) {
@@ -104,8 +105,21 @@ public class LoadLayout extends RelativeLayout implements NestedScrollingParent{
             objectAnimator.removeAllListeners();
             objectAnimator = null;
         }
-
+        if(judgeFooterEnabled()){
+            setLoadEnabled(false);
+        }
         return true;
+    }
+
+    private boolean judgeFooterEnabled(){
+        RecyclerView.LayoutManager layoutManager = mTarget.getLayoutManager();
+        if(layoutManager instanceof LinearLayoutManager)
+        {
+            return (((LinearLayoutManager)layoutManager).findLastCompletelyVisibleItemPosition() == (layoutManager.getItemCount()-1))
+                    && (((LinearLayoutManager)layoutManager).findFirstCompletelyVisibleItemPosition() == 0);
+        }else{
+            return true;
+        }
     }
 
 

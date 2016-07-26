@@ -31,7 +31,7 @@ public class MainActivity extends FragmentActivity{
         recycleView = loadLayout.getRecycleView();
         ArrayList<String> datas = new ArrayList<String>();
 
-        for(int i =0 ;i <60; i++)
+        for(int i =0 ;i <30; i++)
         {
             datas.add(String.valueOf(i));
         }
