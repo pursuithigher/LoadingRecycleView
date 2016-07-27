@@ -1,8 +1,6 @@
 package com.helixnt.nestscroll;
 
-import android.animation.Animator;
 import android.animation.ObjectAnimator;
-import android.animation.TypeEvaluator;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Point;
@@ -17,7 +15,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.LinearInterpolator;
 import android.widget.FrameLayout;
-import android.widget.RelativeLayout;
 
 /**
  * Created by QZhu on 16-7-22.
@@ -94,20 +91,6 @@ public class LoadLayout extends FrameLayout implements NestedScrollingParent{//N
         height = getResources().getDisplayMetrics().heightPixels;
     }
 
-    private void ensureTarget() {
-        // Don't bother getting the parent height if the parent hasn't been laid
-        // out yet.
-        if (mTarget == null) {
-            for (int i = 0; i < getChildCount(); i++) {
-                View child = getChildAt(i);
-                if (child instanceof RecyclerView) {
-                    mTarget = (RecyclerView) child;
-                    break;
-                }
-            }
-        }
-    }
-
     @Override
     public boolean onStartNestedScroll(View child, View target, int nestedScrollAxes) {
         if(objectAnimator!=null && objectAnimator.isRunning())
@@ -156,7 +139,7 @@ public class LoadLayout extends FrameLayout implements NestedScrollingParent{//N
                 offSet_Y = changeOffsetY(offSet_Y);
                 mTarget.setY(RAWY + offSet_Y);//getCalculatorY(offSet_Y));
                 sheader.setY(pheader.y + offSet_Y);
-                nodifyRefreshProcess(offSet_Y);
+                notifyRefreshProcess(offSet_Y);
                 return ;
             }
         }
@@ -168,7 +151,7 @@ public class LoadLayout extends FrameLayout implements NestedScrollingParent{//N
                 offSet_Y = changeOffsetY(offSet_Y);
                 mTarget.setY(RAWY + offSet_Y);
                 sfooter.setY(pfooter.y + offSet_Y);
-                nodifyLoadProcess(offSet_Y);
+                notifyLoadProcess(offSet_Y);
                 return ;
             }
         }
@@ -287,6 +270,9 @@ public class LoadLayout extends FrameLayout implements NestedScrollingParent{//N
                 getMeasuredHeight() - getPaddingTop() - getPaddingBottom(), MeasureSpec.EXACTLY));
     }
 
+    /**
+     * achieve child footer/header
+     */
     private void initialChild(){
         final int childCount = getChildCount();
         for (int i = 0; i < childCount; i++) {
@@ -330,6 +316,26 @@ public class LoadLayout extends FrameLayout implements NestedScrollingParent{//N
         }
     }
 
+    /**
+     * query the recycleView
+     */
+    private void ensureTarget() {
+        // Don't bother getting the parent height if the parent hasn't been laid
+        // out yet.
+        if (mTarget == null) {
+            for (int i = 0; i < getChildCount(); i++) {
+                View child = getChildAt(i);
+                if (child instanceof RecyclerView) {
+                    mTarget = (RecyclerView) child;
+                    break;
+                }
+            }
+        }
+    }
+
+    /**
+     * set child at top/bottom position out the window
+     */
     private void alignChildPosition(){
         if(sleft != null)
         {
@@ -367,6 +373,9 @@ public class LoadLayout extends FrameLayout implements NestedScrollingParent{//N
         }
     }
 
+    /**
+     * initial child point
+     */
     private void initialOuterPoint(){
         if(sleft != null)
         {
@@ -410,8 +419,22 @@ public class LoadLayout extends FrameLayout implements NestedScrollingParent{//N
         return disy;
     }
 
+    /**
+     * this interface is to notify
+     */
     public interface onPrecessChangeListener{
+        /**
+         * load status
+         * @param footer footer view
+         * @param process value -100~0
+         */
         void onLoad(View footer ,int process);
+
+        /**
+         * refresh status
+         * @param header header view
+         * @param process value 0~100
+         */
         void onRefresh(View header ,int process);
     }
 
@@ -421,7 +444,7 @@ public class LoadLayout extends FrameLayout implements NestedScrollingParent{//N
         this.precessChangeListener = precessChangeListener;
     }
 
-    private void nodifyRefreshProcess(int offsety){
+    private void notifyRefreshProcess(int offsety){
         if(precessChangeListener != null)
         {
             int percent = (int) ((offsety*1.0f/headerHeight)*100);
@@ -429,7 +452,7 @@ public class LoadLayout extends FrameLayout implements NestedScrollingParent{//N
         }
     }
 
-    private void nodifyLoadProcess(int offsety){
+    private void notifyLoadProcess(int offsety){
         if(precessChangeListener != null)
         {
             int percent = (int) ((offsety*1.0f/headerHeight)*100);
@@ -438,6 +461,10 @@ public class LoadLayout extends FrameLayout implements NestedScrollingParent{//N
 
     }
 
+    /**
+     * get the recycleView in this view group
+     * @return
+     */
     public RecyclerView getRecycleView(){
         if (mTarget == null) {
             for (int i = 0; i < getChildCount(); i++) {
@@ -450,6 +477,11 @@ public class LoadLayout extends FrameLayout implements NestedScrollingParent{//N
         return mTarget;
     }
 
+    /**
+     * get header/footer view at right position
+     * @param position const value
+     * @return
+     */
     public View getLoatedView(POSITION position){
         if(position == POSITION.BOTTOM)
         {
