@@ -6,6 +6,7 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.View;
 
 import com.helixnt.adapter.MyLoadingAdapter;
 import com.helixnt.nestscroll.LoadLayout;
@@ -17,7 +18,6 @@ import java.util.ArrayList;
  */
 public class MainActivity extends FragmentActivity{
 
-//
     RecyclerView recycleView;
     LoadLayout loadLayout = null;
 
@@ -31,7 +31,7 @@ public class MainActivity extends FragmentActivity{
         recycleView = loadLayout.getRecycleView();
         ArrayList<String> datas = new ArrayList<String>();
 
-        for(int i =0 ;i <30; i++)
+        for(int i =0 ;i <55; i++)
         {
             datas.add(String.valueOf(i));
         }
@@ -43,12 +43,12 @@ public class MainActivity extends FragmentActivity{
 
         loadLayout.setPrecessChangeListener(new LoadLayout.onPrecessChangeListener() {
             @Override
-            public void onLoad(int process) {
+            public void onLoad(View footer , int process) {
                 Log.d("process",String.valueOf(process));
             }
 
             @Override
-            public void onRefresh(int process) {
+            public void onRefresh(View header ,int process) {
                 Log.d("refresh",String.valueOf(process));
             }
         });
