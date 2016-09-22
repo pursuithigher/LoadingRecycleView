@@ -27,6 +27,7 @@ public class MainActivity extends FragmentActivity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.load_layout);
 
+
         loadLayout = (LoadLayout) findViewById(R.id.load_layout);
         recycleView = loadLayout.getRecycleView();
         ArrayList<String> datas = new ArrayList<String>();
