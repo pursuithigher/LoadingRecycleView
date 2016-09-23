@@ -36,24 +36,24 @@ public class MainActivity extends FragmentActivity{
         text.setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 120));
         loadLayout = (LoadLayout) findViewById(R.id.load_layout);
         text.setBackgroundColor(Color.RED);
-        loadLayout.setHeadView(text);
+        loadLayout.setHeadView(text, (LoadLayout.LayoutParams) text.getLayoutParams());
 
         TextView text2 = new TextView(this);
         text2.setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 160));
         text2.setTextColor(Color.WHITE);
         text2.setText("hello2");
         text2.setBackgroundColor(Color.BLACK);
-        loadLayout.setFooterView(text2);
+        loadLayout.setFooterView(text2,(LoadLayout.LayoutParams) text2.getLayoutParams());
 
         recycleView = loadLayout.getRecycleView();
         if(recycleView == null)
             return ;
         ArrayList<String> datas = new ArrayList<String>();
 
-        for(int i =0 ;i <55; i++)
-        {
-            datas.add(String.valueOf(i));
-        }
+//        for(int i =0 ;i <3; i++)
+//        {
+//            datas.add(String.valueOf(i));
+//        }
 
         LinearLayoutManager layoutManager= new LinearLayoutManager(this,LinearLayoutManager.VERTICAL,false);
         recycleView.setLayoutManager(layoutManager);

@@ -6,7 +6,6 @@ import android.content.Context;
 import android.graphics.Point;
 import android.support.v4.view.NestedScrollingParent;
 import android.support.v4.view.NestedScrollingParentHelper;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
 import android.view.Gravity;
@@ -14,9 +13,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.LinearInterpolator;
 import android.widget.FrameLayout;
-import android.widget.LinearLayout;
-
-import static android.widget.LinearLayout.VERTICAL;
 
 /**
  * Created by QZhu on 16-7-22.
@@ -39,7 +35,7 @@ public class LoadLayout extends FrameLayout implements NestedScrollingParent{//N
      * 是否位于Recyler上方作为头部
      * 否则被Recyler覆盖
      */
-    private static boolean LoadUnderFrame = true;
+    private static boolean LoadUnderFrame = false;
     /**
      * 是否位于Recyler下方作为底部
      * 否则被Recyler覆盖
@@ -59,8 +55,8 @@ public class LoadLayout extends FrameLayout implements NestedScrollingParent{//N
     private int width = 0;
     private int height = 0;
 
-    private LinearLayout headGroup = null;
-    private LinearLayout footerGroup = null;
+//    private LinearLayout headGroup = null;
+//    private LinearLayout footerGroup = null;
     private View sleft,sright,sheader,sfooter,scenter;
     private Point pleft,pright,pheader,pfooter;
 
@@ -110,30 +106,32 @@ public class LoadLayout extends FrameLayout implements NestedScrollingParent{//N
 
     private void addChild(){
         removeAllViews();
-        enableLoader();
+
         enableRecycleView();
 
-        FrameLayout.LayoutParams layoutParams = new LayoutParams(LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        layoutParams.gravity = Gravity.TOP;
-        addView(this.headGroup, layoutParams);
-
-        FrameLayout.LayoutParams layoutParamsBottom = new LayoutParams(LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        layoutParamsBottom.gravity = Gravity.BOTTOM;
-        addView(this.footerGroup, layoutParamsBottom);
-
-        addView(this.mTarget, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        enableLoader();
     }
 
     private void enableLoader(){
-        headGroup = new LinearLayout(getContext());
-        headGroup.setOrientation(VERTICAL);
-        footerGroup = new LinearLayout(getContext());
-        footerGroup.setOrientation(VERTICAL);
+//        headGroup = new LinearLayout(getContext());
+//        headGroup.setOrientation(VERTICAL);
+//        footerGroup = new LinearLayout(getContext());
+//        footerGroup.setOrientation(VERTICAL);
+//
+//        FrameLayout.LayoutParams layoutParams = new LayoutParams(LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+//        layoutParams.gravity = Gravity.TOP;
+//        addView(this.headGroup, layoutParams);
+//
+//        FrameLayout.LayoutParams layoutParamsBottom = new LayoutParams(LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+//        layoutParamsBottom.gravity = Gravity.BOTTOM;
+//        addView(this.footerGroup, layoutParamsBottom);
     }
 
     private void enableRecycleView(){
         this.mTarget = new RecyclerView(getContext());
         this.mTarget.setLayoutParams(new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+
+        addView(this.mTarget, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
     }
 
 
@@ -254,13 +252,14 @@ public class LoadLayout extends FrameLayout implements NestedScrollingParent{//N
      */
     private boolean isLastItemVisible(){
         RecyclerView.LayoutManager layoutManager = mTarget.getLayoutManager();
-        if(layoutManager instanceof LinearLayoutManager)
-        {
-            return ((LinearLayoutManager)layoutManager).findLastCompletelyVisibleItemPosition() >= layoutManager.getItemCount()-1;
-        }
-        else{
-            return false;
-        }
+//        if(layoutManager instanceof LinearLayoutManager)
+//        {
+//            return ((LinearLayoutManager)layoutManager).findLastCompletelyVisibleItemPosition() >= layoutManager.getItemCount()-1;
+//        }
+//        else{
+//            return false;
+//        }
+        return true;
     }
 
     ObjectAnimator objectAnimator = null;
@@ -520,7 +519,7 @@ public class LoadLayout extends FrameLayout implements NestedScrollingParent{//N
     private void notifyLoadProcess(int offsety){
         if(precessChangeListener != null)
         {
-            int percent = (int) ((offsety*1.0f/headerHeight)*100);
+            int percent = (int) ((offsety*1.0f/footerHeight)*100);
             precessChangeListener.onLoad(sfooter,percent > 100 ? 100:percent);
         }
 
@@ -568,29 +567,34 @@ public class LoadLayout extends FrameLayout implements NestedScrollingParent{//N
     }
 
 
-    public boolean setHeadView(View view){
+    public boolean setHeadView(View view,LoadLayout.LayoutParams layoutParams){
         if(view!= null && view.getParent() != null)
         {
             return false;
         }else{
-            headGroup.removeAllViews();
-            headGroup.addView(view);
-            headGroup.requestLayout();
+            if(layoutParams == null)
+                layoutParams = new LayoutParams(LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            layoutParams.gravity = Gravity.TOP;
+
             sheader = view;
+            addView(this.sheader, layoutParams);
+
             refreshEnabled = true;
         }
         return true;
     }
 
-    public boolean setFooterView(View view){
+    public boolean setFooterView(View view,LoadLayout.LayoutParams layoutParams){
         if(view!=null && view.getParent() != null)
         {
             return false;
         }else{
-            footerGroup.removeAllViews();
-            footerGroup.addView(view);
-            footerGroup.requestLayout();
+            if(layoutParams == null)
+                layoutParams = new LayoutParams(LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            layoutParams.gravity = Gravity.BOTTOM;
+
             sfooter = view;
+            addView(sfooter, layoutParams);
             loadEnabled = true;
         }
         return true;
