@@ -9,18 +9,20 @@ import android.support.v4.view.NestedScrollingParentHelper;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.LinearInterpolator;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
+
+import static android.widget.LinearLayout.VERTICAL;
 
 /**
  * Created by QZhu on 16-7-22.
  */
 public class LoadLayout extends FrameLayout implements NestedScrollingParent{//NestedScrollingChild
-
+    //
     public final static int BounceTime = 1000;
 
     private RecyclerView mTarget = null; // the target of the gesture
@@ -30,8 +32,19 @@ public class LoadLayout extends FrameLayout implements NestedScrollingParent{//N
 
     private int RAWX = -1;
 
-    private boolean refreshEnabled = true;
-    private boolean loadEnabled = true;
+    private boolean refreshEnabled = false;
+    private boolean loadEnabled = false;
+
+    /**
+     * 是否位于Recyler上方作为头部
+     * 否则被Recyler覆盖
+     */
+    private static boolean LoadUnderFrame = true;
+    /**
+     * 是否位于Recyler下方作为底部
+     * 否则被Recyler覆盖
+     */
+    private static boolean RefreshUnderFrame = false;
 
     public final static String LEFT = "left";
     public final static String RIGHT = "right";
@@ -46,6 +59,8 @@ public class LoadLayout extends FrameLayout implements NestedScrollingParent{//N
     private int width = 0;
     private int height = 0;
 
+    private LinearLayout headGroup = null;
+    private LinearLayout footerGroup = null;
     private View sleft,sright,sheader,sfooter,scenter;
     private Point pleft,pright,pheader,pfooter;
 
@@ -89,7 +104,38 @@ public class LoadLayout extends FrameLayout implements NestedScrollingParent{//N
         mNestedScrollingParentHelper = new NestedScrollingParentHelper(this);
         width = getResources().getDisplayMetrics().widthPixels;
         height = getResources().getDisplayMetrics().heightPixels;
+
+        addChild();
     }
+
+    private void addChild(){
+        removeAllViews();
+        enableLoader();
+        enableRecycleView();
+
+        FrameLayout.LayoutParams layoutParams = new LayoutParams(LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        layoutParams.gravity = Gravity.TOP;
+        addView(this.headGroup, layoutParams);
+
+        FrameLayout.LayoutParams layoutParamsBottom = new LayoutParams(LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        layoutParamsBottom.gravity = Gravity.BOTTOM;
+        addView(this.footerGroup, layoutParamsBottom);
+
+        addView(this.mTarget, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+    }
+
+    private void enableLoader(){
+        headGroup = new LinearLayout(getContext());
+        headGroup.setOrientation(VERTICAL);
+        footerGroup = new LinearLayout(getContext());
+        footerGroup.setOrientation(VERTICAL);
+    }
+
+    private void enableRecycleView(){
+        this.mTarget = new RecyclerView(getContext());
+        this.mTarget.setLayoutParams(new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+    }
+
 
     @Override
     public boolean onStartNestedScroll(View child, View target, int nestedScrollAxes) {
@@ -107,16 +153,16 @@ public class LoadLayout extends FrameLayout implements NestedScrollingParent{//N
         return true;
     }
 
-    private boolean judgeFooterEnabled(){
-        RecyclerView.LayoutManager layoutManager = mTarget.getLayoutManager();
-        if(layoutManager instanceof LinearLayoutManager)
-        {
-            return (((LinearLayoutManager)layoutManager).findLastCompletelyVisibleItemPosition() == (layoutManager.getItemCount()-1))
-                    && (((LinearLayoutManager)layoutManager).findFirstCompletelyVisibleItemPosition() == 0);
-        }else{
-            return true;
-        }
-    }
+//    private boolean judgeFooterEnabled(){
+//        RecyclerView.LayoutManager layoutManager = mTarget.getLayoutManager();
+//        if(layoutManager instanceof LinearLayoutManager)
+//        {
+//            return (((LinearLayoutManager)layoutManager).findLastCompletelyVisibleItemPosition() == (layoutManager.getItemCount()-1))
+//                    && (((LinearLayoutManager)layoutManager).findFirstCompletelyVisibleItemPosition() == 0);
+//        }else{
+//            return true;
+//        }
+//    }
 
 
     @Override
@@ -138,7 +184,8 @@ public class LoadLayout extends FrameLayout implements NestedScrollingParent{//N
                 offSet_Y -= dyUnconsumed;
                 offSet_Y = changeOffsetY(offSet_Y);
                 mTarget.setY(RAWY + offSet_Y);//getCalculatorY(offSet_Y));
-                sheader.setY(pheader.y + offSet_Y);
+                if(!RefreshUnderFrame)
+                    sheader.setY(pheader.y + offSet_Y);
                 notifyRefreshProcess(offSet_Y);
                 return ;
             }
@@ -150,7 +197,8 @@ public class LoadLayout extends FrameLayout implements NestedScrollingParent{//N
                 offSet_Y -= dyUnconsumed;
                 offSet_Y = changeOffsetY(offSet_Y);
                 mTarget.setY(RAWY + offSet_Y);
-                sfooter.setY(pfooter.y + offSet_Y);
+                if(!LoadUnderFrame)
+                    sfooter.setY(pfooter.y + offSet_Y);
                 notifyLoadProcess(offSet_Y);
                 return ;
             }
@@ -172,7 +220,8 @@ public class LoadLayout extends FrameLayout implements NestedScrollingParent{//N
                         offSet_Y = 0;
                     }
                     mTarget.setY(RAWY + changeOffsetY(offSet_Y));//getCalculatorY(offSet_Y));
-                    sheader.setY(pheader.y + offSet_Y);
+                    if(!RefreshUnderFrame)
+                        sheader.setY(pheader.y + offSet_Y);
                     return;
                 }
             }
@@ -190,7 +239,8 @@ public class LoadLayout extends FrameLayout implements NestedScrollingParent{//N
                             offSet_Y = 0;
                         }
                         mTarget.setY(RAWY + changeOffsetY(offSet_Y));
-                        sfooter.setY(pfooter.y + offSet_Y);
+                        if(!LoadUnderFrame)
+                            sfooter.setY(pfooter.y + offSet_Y);
                         return;
                     }
                 }
@@ -198,6 +248,10 @@ public class LoadLayout extends FrameLayout implements NestedScrollingParent{//N
         }
     }
 
+    /**
+     * this is for loading more only valid when recyclerView use LinearLayoutManager
+     * @return
+     */
     private boolean isLastItemVisible(){
         RecyclerView.LayoutManager layoutManager = mTarget.getLayoutManager();
         if(layoutManager instanceof LinearLayoutManager)
@@ -227,10 +281,15 @@ public class LoadLayout extends FrameLayout implements NestedScrollingParent{//N
                     if(offSet_Y > 0)
                     {
                         if(refreshEnabled)
-                            sheader.setY(pheader.y + offSet_Y);
+                        {
+                            if(!RefreshUnderFrame)
+                                sheader.setY(pheader.y + offSet_Y);
+                        }
                     }else {
-                        if(loadEnabled)
-                            sfooter.setY(pfooter.y + offSet_Y);
+                        if(loadEnabled) {
+                            if(!LoadUnderFrame)
+                                sfooter.setY(pfooter.y + offSet_Y);
+                        }
                     }
                 }
             });
@@ -256,9 +315,12 @@ public class LoadLayout extends FrameLayout implements NestedScrollingParent{//N
     @Override
     public void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        initialChild();
+
+        //if recycler == null then load from child
+        //else it will add automatic
         if (mTarget == null) {
             ensureTarget();
+            initialChild();
         }
         if (mTarget == null) {
             return;
@@ -268,6 +330,23 @@ public class LoadLayout extends FrameLayout implements NestedScrollingParent{//N
                 getMeasuredWidth() - getPaddingLeft() - getPaddingRight(),
                 MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(
                 getMeasuredHeight() - getPaddingTop() - getPaddingBottom(), MeasureSpec.EXACTLY));
+    }
+
+    /**
+     * query the recycleView
+     */
+    private void ensureTarget() {
+        // Don't bother getting the parent height if the parent hasn't been laid
+        // out yet.
+        if (mTarget == null) {
+            for (int i = 0; i < getChildCount(); i++) {
+                View child = getChildAt(i);
+                if (child instanceof RecyclerView) {
+                    mTarget = (RecyclerView) child;
+                    break;
+                }
+            }
+        }
     }
 
     /**
@@ -316,22 +395,6 @@ public class LoadLayout extends FrameLayout implements NestedScrollingParent{//N
         }
     }
 
-    /**
-     * query the recycleView
-     */
-    private void ensureTarget() {
-        // Don't bother getting the parent height if the parent hasn't been laid
-        // out yet.
-        if (mTarget == null) {
-            for (int i = 0; i < getChildCount(); i++) {
-                View child = getChildAt(i);
-                if (child instanceof RecyclerView) {
-                    mTarget = (RecyclerView) child;
-                    break;
-                }
-            }
-        }
-    }
 
     /**
      * set child at top/bottom position out the window
@@ -347,11 +410,13 @@ public class LoadLayout extends FrameLayout implements NestedScrollingParent{//N
         }
         if(sheader != null)
         {
-            sheader.setY(0 - sheader.getMeasuredHeight());
+            if(!RefreshUnderFrame)
+                sheader.setY(0 - sheader.getMeasuredHeight());
         }
         if(sfooter != null && mTarget != null)
         {
-            sfooter.setY(mTarget.getY() + mTarget.getMeasuredHeight());
+            if(!LoadUnderFrame)
+                sfooter.setY(mTarget.getY() + mTarget.getMeasuredHeight());
         }
     }
 
@@ -401,12 +466,12 @@ public class LoadLayout extends FrameLayout implements NestedScrollingParent{//N
 
     private void setHeaderHeight(int headerHeight) {
         this.headerHeight = headerHeight;
-        Log.d("header height = ",String.valueOf(headerHeight));
+//        Log.d("header height = ",String.valueOf(headerHeight));
     }
 
     private void setFooterHeight(int footerHeight) {
         this.footerHeight = footerHeight;
-        Log.d("footer height = ",String.valueOf(footerHeight));
+//        Log.d("footer height = ",String.valueOf(footerHeight));
     }
 
     private int changeOffsetY(int disy){
@@ -502,4 +567,32 @@ public class LoadLayout extends FrameLayout implements NestedScrollingParent{//N
         return null;
     }
 
+
+    public boolean setHeadView(View view){
+        if(view!= null && view.getParent() != null)
+        {
+            return false;
+        }else{
+            headGroup.removeAllViews();
+            headGroup.addView(view);
+            headGroup.requestLayout();
+            sheader = view;
+            refreshEnabled = true;
+        }
+        return true;
+    }
+
+    public boolean setFooterView(View view){
+        if(view!=null && view.getParent() != null)
+        {
+            return false;
+        }else{
+            footerGroup.removeAllViews();
+            footerGroup.addView(view);
+            footerGroup.requestLayout();
+            sfooter = view;
+            loadEnabled = true;
+        }
+        return true;
+    }
 }
